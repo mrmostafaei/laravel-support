@@ -41,7 +41,6 @@
         "illuminate/routing": "^8.0.0 || ^9.0.0",
         "illuminate/support": "^8.0.0 || ^9.0.0",
         "illuminate/validation": "^8.0.0 || ^9.0.0",
-        "felixkiss/uniquewith-validator": "^3.4.2",
         "watson/validating": "^7.0.0",
         "spatie/laravel-schemaless-attributes": "^2.0.0"
     },

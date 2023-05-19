@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace MiladTech\Support\Traits;
 
-use MiladTech\Validating\Injectors\UniqueWithInjector;
-use MiladTech\Validating\ValidatingTrait as BaseValidatingTrait;
+use Watson\Validating\Injectors\UniqueWithInjector;
+use Watson\Validating\ValidatingTrait as BaseValidatingTrait;
 
 trait ValidatingTrait
 {
