@@ -13,33 +13,71 @@ trait ConsoleTools
      *
      * @return void
      */
-    protected function publishesMigrations(string $package, bool $isModule = false): void
+    public function publishesMigrations($paths, $groups = null)
     {
         if (! $this->publishesResources()) {
             return;
         }
 
+        // اگر ورودی string بود → لاراول ۹ و پایین‌تر
+        if (is_string($paths)) {
+            $package  = $paths;
+            $isModule = $groups ?? false; // چون توی لاراول ۹ آرگومان دوم bool هست
+
+            $this->handlePackageMigrations($package, $isModule);
+            return;
+        }
+
+        // اگر ورودی آرایه بود → لاراول ۱۰+
+        if (is_array($paths)) {
+            foreach ($paths as $package => $isModule) {
+                $this->handlePackageMigrations($package, $isModule);
+            }
+        }
+    }
+
+    /**
+     * متد کمکی برای publish کردن مایگریشن‌های یک پکیج
+     */
+    protected function handlePackageMigrations(string $package, bool $isModule = false): void
+    {
         $namespace = str_replace('laravel-', '', $package);
-        $basePath = $isModule ? $this->app->path($package)
+
+        $basePath = $isModule
+            ? $this->app->path($package)
             : $this->app->basePath('vendor/'.$package);
 
         if (file_exists($path = $basePath.'/database/migrations')) {
             $stubs = $this->app['files']->glob($path.'/*.php');
-            $existing = $this->app['files']->glob($this->app->databasePath('migrations/'.$package.'/*.php'));
+            $existing = $this->app['files']->glob(
+                $this->app->databasePath('migrations/'.$package.'/*.php')
+            );
 
             $migrations = collect($stubs)->flatMap(function ($migration) use ($existing, $package) {
                 $sequence = mb_substr(basename($migration), 0, 17);
-                $match = collect($existing)->first(function ($item, $key) use ($migration, $sequence) {
-                    return mb_strpos($item, str_replace($sequence, '', basename($migration))) !== false;
+
+                $match = collect($existing)->first(function ($item) use ($migration, $sequence) {
+                    return mb_strpos(
+                            $item,
+                            str_replace($sequence, '', basename($migration))
+                        ) !== false;
                 });
 
-                return [$migration => $this->app->databasePath('migrations/'.$package.'/'.($match ? basename($match) : date('Y_m_d_His', time() + mb_substr($sequence, -6)).str_replace($sequence, '', basename($migration))))];
+                return [
+                    $migration => $this->app->databasePath(
+                        'migrations/'.$package.'/'
+                        .($match
+                            ? basename($match)
+                            : date('Y_m_d_His', time() + mb_substr($sequence, -6))
+                            . str_replace($sequence, '', basename($migration))
+                        )
+                    ),
+                ];
             })->toArray();
 
             $this->publishes($migrations, $namespace.'::migrations');
         }
     }
-
     /**
      * Publish package config.
      *
